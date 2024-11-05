@@ -11,7 +11,7 @@ const create = async (data) => {
 
 const read = async () => {
     try {
-        const all = await Product.find()
+        const all = await Product.find().lean()
         return all
     } catch (error) {
         throw error
