@@ -35,6 +35,7 @@ productsApiRouter.put("/:id", async (req, res, next) => {
         return next(error)
     }
 })
+
 productsApiRouter.delete("/:id", async (req, res, next) => {
     try {
         const { id } = req.params
