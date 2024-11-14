@@ -22,6 +22,7 @@ server.listen(port, ready)
 // middlewares
 server.use(express.json())
 server.use(express.urlencoded({ extended: true }))
+server.use(express.static("public"))
 server.use(morgan("dev"))
 // configuracion de cookies
 server.use(cookieParser(process.env.SECRET_KEY))
