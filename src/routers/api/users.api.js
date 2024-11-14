@@ -3,7 +3,14 @@ import { create, read, update, destroy } from "../../data/mongo/managers/users.m
 
 const usersApiRouter = Router()
 
-usersApiRouter.post("/", async (req, res, next) => {
+usersApiRouter.post("/", createUser)
+usersApiRouter.get("/", readUsers)
+usersApiRouter.put("/:id", updateUser)
+usersApiRouter.delete("/:id", destroyUser)
+
+export default usersApiRouter
+
+async function createUser(req, res, next) {
     try {
         const message = "USER CREATED"
         const data = req.body
@@ -12,9 +19,8 @@ usersApiRouter.post("/", async (req, res, next) => {
     } catch (error) {
         return next(error)
     }
-})
-
-usersApiRouter.get("/", async (req, res, next) => {
+}
+async function readUsers(req, res, next) {
     try {
         const message = "USERS FOUND"
         const response = await read()
@@ -22,9 +28,8 @@ usersApiRouter.get("/", async (req, res, next) => {
     } catch (error) {
         return next(error)
     }
-})
-
-usersApiRouter.put("/:id", async (req, res, next) => {
+}
+async function updateUser(req, res, next) {
     try {
         const { id } = req.params
         const data = req.body
@@ -34,9 +39,8 @@ usersApiRouter.put("/:id", async (req, res, next) => {
     } catch (error) {
         return next(error)
     }
-})
-
-usersApiRouter.delete("/:id", async (req, res, next) => {
+}
+async function destroyUser(req, res, next) {
     try {
         const { id } = req.params
         const message = "USER DELETED"
@@ -45,6 +49,4 @@ usersApiRouter.delete("/:id", async (req, res, next) => {
     } catch (error) {
         return next(error)
     }
-})
-
-export default usersApiRouter
+}

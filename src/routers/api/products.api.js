@@ -3,7 +3,14 @@ import { create, read, update, destroy } from "../../data/mongo/managers/product
 
 const productsApiRouter = Router()
 
-productsApiRouter.post("/", async (req, res, next) => {
+productsApiRouter.post("/", createProduct)
+productsApiRouter.get("/", readProducts)
+productsApiRouter.put("/:id", updateProduct)
+productsApiRouter.delete("/:id", destroyProduct)
+
+export default productsApiRouter
+
+async function createProduct(req, res, next) {
     try {
         const message = "PRODUCT CREATED"
         const data = req.body
@@ -12,9 +19,8 @@ productsApiRouter.post("/", async (req, res, next) => {
     } catch (error) {
         return next(error)
     }
-})
-
-productsApiRouter.get("/", async (req, res, next) => {
+}
+async function readProducts(req, res, next) {
     try {
         const message = "PRODUCTS FOUND"
         const response = await read()
@@ -22,9 +28,8 @@ productsApiRouter.get("/", async (req, res, next) => {
     } catch (error) {
         return next(error)
     }
-})
-
-productsApiRouter.put("/:id", async (req, res, next) => {
+}
+async function updateProduct(req, res, next) {
     try {
         const { id } = req.params
         const data = req.body
@@ -34,9 +39,8 @@ productsApiRouter.put("/:id", async (req, res, next) => {
     } catch (error) {
         return next(error)
     }
-})
-
-productsApiRouter.delete("/:id", async (req, res, next) => {
+}
+async function destroyProduct(req, res, next) {
     try {
         const { id } = req.params
         const message = "PRODUCT DELETED"
@@ -45,6 +49,4 @@ productsApiRouter.delete("/:id", async (req, res, next) => {
     } catch (error) {
         return next(error)
     }
-})
-
-export default productsApiRouter
+}

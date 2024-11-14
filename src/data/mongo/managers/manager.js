@@ -31,9 +31,9 @@ class Manager {
         }
     }
 
-    read = async () => {
+    read = async (data) => {
         try {
-            const all = await this.model.find().lean()
+            const all = await this.model.find(data).lean()
             return all
         } catch (error) {
             throw error

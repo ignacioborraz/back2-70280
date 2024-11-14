@@ -22,7 +22,6 @@ async function register(req, res, next) {
         return next(error)
     }
 }
-
 async function login(req, res, next) {
     try {
         const { email }= req.body
@@ -34,7 +33,6 @@ async function login(req, res, next) {
         return next(error)
     }    
 }
-
 function signout(req, res, next) {
     try {
         req.session.destroy()
@@ -43,7 +41,6 @@ function signout(req, res, next) {
         return next(error)
     }
 }
-
 async function online(req, res, next) {
     try {
         const { user_id } = req.session
