@@ -8,7 +8,7 @@ function createHash(req, res, next) {
         return next()
     } catch (error) {
         return next(error)
-    } 
+    }
 }
 
 export default createHash

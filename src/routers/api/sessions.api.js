@@ -1,8 +1,6 @@
 import { Router } from "express";
-import { readByEmail, readById } from "../../data/mongo/managers/users.manager.js";
+import { readById } from "../../data/mongo/managers/users.manager.js";
 import passport from "../../middlewares/passport.mid.js";
-import isValidUser from "../../middlewares/isValidUser.mid.js";
-import verifyHash from "../../middlewares/verifyHash.mid.js";
 
 const sessionsRouter = Router()
 
@@ -16,7 +14,6 @@ export default sessionsRouter
 async function register(req, res, next) {
     try {
         const user = req.user
-        // done(null, user) habilita un objeto user con los datos del usuario creado en passport
         return res.status(201).json({ message: "USER REGISTERED", user_id: user._id })
     } catch (error) {
         return next(error)
@@ -25,9 +22,6 @@ async function register(req, res, next) {
 async function login(req, res, next) {
     try {
         const user = req.user
-        console.log(user);
-        
-        // done(null, user) habilita un objeto user con los datos del usuario creado en passport
         return res.status(200).json({ message: "USER LOGGED IN", user_id: user._id })
     } catch (error) {
         return next(error)
