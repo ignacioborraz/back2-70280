@@ -17,6 +17,7 @@ selector.addEventListener("click", async (event)=>{
         // aca como estamos dentro del servidor ME AHORRO LOCALHOST
         let response = await fetch("/api/sessions/login", options) 
         response = await response.json()
+        localStorage.setItem("token", response.token)
         alert(response.message)
     } catch (error) {
         alert(error.message)
