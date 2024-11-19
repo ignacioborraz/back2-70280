@@ -8,6 +8,10 @@ sessionsRouter.post("/register", passport.authenticate("register", { session: fa
 sessionsRouter.post("/login", passport.authenticate("login", { session: false }), login)
 sessionsRouter.post("/signout", signout)
 sessionsRouter.post("/online", online)
+// /api/sessions/google va a llamar a la pantalla de consentimiento y se encarga de autenticar en google
+sessionsRouter.get("/google", passport.authenticate("google", { scope: ["email", "profile"]}))
+// /api/sessions/google/cb va a llamar efectivamente a la estrategia encargada de register/login con google
+sessionsRouter.get("/google/cb", passport.authenticate("google", { session: false }), google)
 
 export default sessionsRouter
 
@@ -44,6 +48,14 @@ async function online(req, res, next) {
         } else {
             return res.status(400).json({ message: "USER IS NOT ONLINE", online: false })
         }
+    } catch (error) {
+        return next(error)
+    }
+}
+function google(req, res, next) {
+    try {
+        const user = req.user
+        return res.status(200).json({ message: "USER LOGGED IN", user_id: user._id })
     } catch (error) {
         return next(error)
     }

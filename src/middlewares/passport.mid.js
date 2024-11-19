@@ -1,7 +1,9 @@
 import passport from "passport"
 import { Strategy as LocalStrategy } from "passport-local"
+import { Strategy as GoogleStrategy } from "passport-google-oauth2"
 import { create, readByEmail } from "../data/mongo/managers/users.manager.js"
 import { createHashUtil, verifyHashUtil } from "../utils/hash.util.js"
+const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, BASE_URL } = process.env
 
 passport.use("register", new LocalStrategy(
     { passReqToCallback: true, usernameField: "email" },
@@ -50,6 +52,31 @@ passport.use("login", new LocalStrategy(
             req.session.role = one.role
             req.session.user_id = one._id
             return done(null, one)
+        } catch (error) {
+            return done(error)
+        }
+    }
+))
+passport.use("google", new GoogleStrategy(
+    { clientID: GOOGLE_CLIENT_ID, clientSecret: GOOGLE_CLIENT_SECRET, passReqToCallback: true, callbackURL: BASE_URL+"sessions/google/cb" },
+    async (req, accessToken, refreshToken, profile, done)=>{
+        try {
+            // desestructuro de los datos de google el id del usuario y su foto/avatar
+            // console.log(profile);            
+            const { id, picture } = profile
+            // como estrategia de terceros NO SE SUELE registrar al usuario por su email sino por su identificador en la base del tercero
+            // esto es debido a que si utilizo el email, SI O SI necesito la contraseña y la contraseña NO LA ENVIA NINGUN TERCERO (google)
+            let user = await readByEmail(id)
+            // si el usuario no es parte de la base de datos
+            if (!user) {
+                // lo crea/registra
+                user = await create({ email: id, photo: picture, password: createHashUtil(id) })
+            }
+            // y luego inicia sesión "automaticamente"
+            req.session.role = user.role
+            req.session.user_id = user._id
+            // este done() agrega al objeto de requerimientos el objeto user con los datos del register/login user
+            return done(null, user)
         } catch (error) {
             return done(error)
         }
