@@ -20,11 +20,38 @@ passport.use("register", new LocalStrategy(
  * @login
  * Busca el usuario por correo en la base de datos.
  * Verifica si la contraseña ingresada coincide con el hash almacenado.
+ * Generar el token de autenticación
  * Retorna el usuario si la autenticación es exitosa.
 */
 passport.use("login", new LocalStrategy(
-    { /* OBJETO DE CONFIGURACION */ },
-    async () => { /* CB CON LA LOGICA DE LA ESTRATEGIA */ }
+    { passReqToCallback: true, usernameField: "email" },
+    async (req, email, password, done) => {
+        try {
+            const user = await readByEmail(email)
+            if (!user) {
+                const error = new Error("USER NOT FOUND")
+                error.statusCode = 401
+                return done(error)
+            }
+            const passwordForm = password /* req.body.password */
+            const passwordDb = user.password
+            const verify = verifyHashUtil(passwordForm, passwordDb)
+            if (!verify) {
+                const error = new Error("INVALID CREDENTIALS")
+                error.statusCode = 401
+                return done(error)
+            }
+            const data = {
+                user_id: user._id,
+                role: user.role
+            }
+            const token = createTokenUtil(data)
+            req.token = token
+            return done(null, user)
+        } catch (error) {
+            return done(error)
+        }
+    }
 ))
 /**
  * @admin
