@@ -1,7 +1,7 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as GoogleStrategy } from "passport-google-oauth2";
-import { create, readByEmail } from "../data/mongo/managers/users.manager.js";
+import { create, readByEmail, readById, update } from "../data/mongo/managers/users.manager.js";
 import { createHashUtil, verifyHashUtil } from "../utils/hash.util.js";
 import { createTokenUtil } from "../utils/token.util.js";
 const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, BASE_URL } = process.env;
@@ -51,7 +51,8 @@ passport.use(
  * @login
  * Busca el usuario por correo en la base de datos.
  * Verifica si la contraseña ingresada coincide con el hash almacenado.
- * Generar el token de autenticación
+ * Generar el token de autenticación.
+ * Modificar isOnline en la base de datos.
  * Retorna el usuario si la autenticación es exitosa.
  */
 passport.use(
@@ -78,6 +79,7 @@ passport.use(
       };
       const token = createTokenUtil(data);
       req.token = token;
+      await update(user._id, { isOnline: true })
       return done(null, user);
     } catch (error) {
       return done(error);
@@ -114,19 +116,21 @@ passport.use(
       usernameField: "email", // Campo que se usará como nombre de usuario
       passwordField: "password", // Campo que se usará para la contraseña
     },
-    async (req, email, passport, done) => {
+    async (req, email, password, done) => {
       /* CB CON LA LOGICA DE LA ESTRATEGIA */
       try {
-        // Verificar si el usuario ya existe en la base de datos
-        const user = await readByEmail(email);
-        // Verificar la contraseña
-        const isPasswordValid = verifyHashUtil(password, user.password);
-        if (!isPasswordValid) {
-          return done(null, false, { message: "Incorrect password" });
-        } // Validar si el usuario está en línea // Esto dependerá de tu implementación: aquí asumimos que tienes un campo `isOnline`
-        if (!user.isOnline) {
-          return done(null, false, { message: "User is not online" });
+        // Validar el token
+        const token = req.token
+        const { user_id } = verifyTokenUtil(token)
+        // buscar si el usuario está online
+        const user = await readById(user_id)
+        const { isOnline } = user
+        if (!isOnline) {
+            const error = new Error("USER IS NOT ONLINE")
+            error.statusCode = 401
+            return done(error);
         }
+        return done(null, user)
       } catch (error) {
         return done(null, user);
       }
