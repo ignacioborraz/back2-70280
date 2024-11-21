@@ -35,7 +35,7 @@ async function login(req, res, next) {
 }
 function signout(req, res, next) {
     try {
-        req.session.destroy()
+        delete req.token
         return res.status(200).json({ message: "USER SIGNED OUT" })
     } catch (error) {
         return next(error)
