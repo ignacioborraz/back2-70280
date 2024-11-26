@@ -10,9 +10,19 @@ function createTokenUtil(data) {
     return token
 }
 
+function finishTokenUtil(data) {
+    const token = jwt.sign(
+        data,
+        SECRET_KEY,
+        { expiresIn: 1 }
+    )
+    return token
+}
+
+
 function verifyTokenUtil(token) {
     const verifyData = jwt.verify(token, SECRET_KEY)
     return verifyData
 }
 
-export { createTokenUtil, verifyTokenUtil }
+export { createTokenUtil, finishTokenUtil, verifyTokenUtil }

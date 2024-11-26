@@ -1,27 +1,22 @@
 import { Router } from "express";
 import { readById } from "../../data/mongo/managers/users.manager.js";
-import passportCb from "../../middlewares/passportCb.mid.js";
+import passport from "../../middlewares/passport.mid.js";
 
 const sessionsRouter = Router();
+const opts = { session: false }
 
-sessionsRouter.post("/register", passportCb("register"), register);
-sessionsRouter.post("/login", passportCb("login"), login);
-sessionsRouter.post("/signout", passportCb("signout"), signout);
-sessionsRouter.post("/online", passportCb("online"), onlineToken);
-sessionsRouter.get(
-  "/google",
-  passportCb("google", { scope: ["email", "profile"] })
-);
-sessionsRouter.get("/google/cb", passportCb("google"), google);
+sessionsRouter.post("/register", passport.authenticate("register", opts), register);
+sessionsRouter.post("/login", passport.authenticate("login", opts), login);
+sessionsRouter.post("/signout", passport.authenticate("signout", opts), signout);
+sessionsRouter.post("/online", passport.authenticate("online", opts), onlineToken);
+sessionsRouter.get("/google", passport.authenticate("google", { scope: ["email", "profile"] }));
+sessionsRouter.get("/google/cb", passport.authenticate("google"), google);
 
 export default sessionsRouter;
 
 async function register(req, res, next) {
   try {
     const { _id } = req.user;
-    const { message } = req;
-    console.log();
-
     return res.status(201).json({ message, user_id: _id });
   } catch (error) {
     return next(error);
@@ -30,7 +25,7 @@ async function register(req, res, next) {
 async function login(req, res, next) {
   try {
     const { token } = req.user;
-    const opts = { maxAge: 60 * 60 * 24 * 7, httpOnly: true };
+    const opts = { maxAge: 60*60*24*7, httpOnly: true }
     return res
       .status(200)
       .cookie("token", token, opts)
@@ -42,8 +37,8 @@ async function login(req, res, next) {
 function signout(req, res, next) {
   try {
     return res
-      .clearCookie("token")
       .status(200)
+      .clearCookie("token")
       .json({ message: "USER SIGNED OUT" });
   } catch (error) {
     return next(error);

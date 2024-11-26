@@ -76,22 +76,20 @@ passport.use(
 passport.use(
   "admin",
   new JwtStrategy(
-    {
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: process.env.SECRET_KEY,
-    },
+    { jwtFromRequest: ExtractJwt.fromExtractors([req=>req?.cookies?.token]), secretOrKey: process.env.SECRET_KEY },
     async (data, done) => {
       try {
-        const { role, user_id } = data;
+        //console.log(data);
+        const { user_id, role } = data
         if (role !== "ADMIN") {
-          const error = new Error("UNAUTHORIZED");
-          error.statusCode = 403;
-          return done(error);
+          const error = new Error("NOT AUTHORIZED")
+          error.statusCode = 403
+          return done(error)
         }
-        const user = await readById(user_id);
-        return done(null, user);
+        const user = await readById(user_id)
+        return done(null, user)
       } catch (error) {
-        return done(error);
+        
       }
     }
   )
@@ -100,7 +98,7 @@ passport.use(
   "online",
   new JwtStrategy(
     {
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([req=>req?.cookies?.token]),
       secretOrKey: process.env.SECRET_KEY,
     },
     async (data, done) => {
@@ -129,17 +127,15 @@ passport.use(
 passport.use(
   "signout",
   new JwtStrategy(
-    {
-      jwtFromRequest: ExtractJwt.fromExtractors([(req) => req?.cookies?.token]),
-      secretOrKey: process.env.SECRET_KEY,
-    },
+    { jwtFromRequest: ExtractJwt.fromExtractors([req=>req?.cookies?.token]), secretOrKey: process.env.SECRET_KEY },
     async (data, done) => {
       try {
-        const { user_id } = data;
-        await update(user_id, { isOnline: false });
-        return done(null, { _id: user_id });
+        const { user_id } = data
+        await update(user_id, { isOnline: false})
+        // construiria un token que venza al instante
+        return done(null, { user_id: null })
       } catch (error) {
-        return done(error);
+        return done(error)
       }
     }
   )
