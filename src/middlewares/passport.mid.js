@@ -23,7 +23,7 @@ passport.use(
       try {
         const one = await readByEmail(email);
         if (one) {
-          const info = { message: "USER ALREADY EXISTS", statusCode: 401 }
+          const info = { message: "USER ALREADY EXISTS", statusCode: 401 };
           return done(null, false, info);
         }
         const hashedPassword = createHashUtil(password);
@@ -47,17 +47,21 @@ passport.use(
       try {
         const user = await readByEmail(email);
         if (!user) {
-          const error = new Error("USER NOT FOUND");
-          error.statusCode = 401;
-          return done(error);
+          // const error = new Error("USER NOT FOUND");
+          // error.statusCode = 401;
+          // return done(error);
+          const info = { message: "USER NOT FOUND", statusCode: 401 };
+          return done(null, false, info);
         }
         const passwordForm = password; /* req.body.password */
         const passwordDb = user.password;
         const verify = verifyHashUtil(passwordForm, passwordDb);
         if (!verify) {
-          const error = new Error("INVALID CREDENTIALS");
-          error.statusCode = 401;
-          return done(error);
+          // const error = new Error("INVALID CREDENTIALS");
+          // error.statusCode = 401;
+          // return done(error);
+          const info = { message: "INVALID CREDENTIALS", statusCode: 401 };
+          return done(null, false, info);
         }
         const data = {
           user_id: user._id,
@@ -76,21 +80,24 @@ passport.use(
 passport.use(
   "admin",
   new JwtStrategy(
-    { jwtFromRequest: ExtractJwt.fromExtractors([req=>req?.cookies?.token]), secretOrKey: process.env.SECRET_KEY },
+    {
+      jwtFromRequest: ExtractJwt.fromExtractors([(req) => req?.cookies?.token]),
+      secretOrKey: process.env.SECRET_KEY,
+    },
     async (data, done) => {
       try {
         //console.log(data);
-        const { user_id, role } = data
+        const { user_id, role } = data;
         if (role !== "ADMIN") {
-          const error = new Error("NOT AUTHORIZED")
-          error.statusCode = 403
-          return done(error)
+          // const error = new Error("NOT AUTHORIZED")
+          // error.statusCode = 403
+          // return done(error)
+          const info = { message: "NOT AUTHORIZE", statusCode: 403 };
+          return done(null, false, info);
         }
-        const user = await readById(user_id)
-        return done(null, user)
-      } catch (error) {
-        
-      }
+        const user = await readById(user_id);
+        return done(null, user);
+      } catch (error) {}
     }
   )
 );
@@ -98,26 +105,22 @@ passport.use(
   "online",
   new JwtStrategy(
     {
-      jwtFromRequest: ExtractJwt.fromExtractors([req=>req?.cookies?.token]),
+      jwtFromRequest: ExtractJwt.fromExtractors([(req) => req?.cookies?.token]),
       secretOrKey: process.env.SECRET_KEY,
     },
     async (data, done) => {
       try {
         const { user_id } = data;
-        if (!user_id) {
-          const error = new Error("INVALID TOKEN");
-          error.statusCode = 401;
-          return done(error);
-        } else {
-          const user = await readById(user_id);
-          const { isOnline } = user;
-          if (!isOnline) {
-            const error = new Error("USER IS NOT ONLINE");
-            error.statusCode = 401;
-            return done(error);
-          }
-          return done(null, user);
+        const user = await readById(user_id);
+        const { isOnline } = user;
+        if (!isOnline) {
+          // const error = new Error("USER IS NOT ONLINE");
+          // error.statusCode = 401;
+          // return done(error);
+          const info = { message: "USER IS NOT ONLINE", statusCode: 401 };
+          return done(null, false, info);
         }
+        return done(null, user);
       } catch (error) {
         return done(error);
       }
@@ -127,15 +130,18 @@ passport.use(
 passport.use(
   "signout",
   new JwtStrategy(
-    { jwtFromRequest: ExtractJwt.fromExtractors([req=>req?.cookies?.token]), secretOrKey: process.env.SECRET_KEY },
+    {
+      jwtFromRequest: ExtractJwt.fromExtractors([(req) => req?.cookies?.token]),
+      secretOrKey: process.env.SECRET_KEY,
+    },
     async (data, done) => {
       try {
-        const { user_id } = data
-        await update(user_id, { isOnline: false})
+        const { user_id } = data;
+        await update(user_id, { isOnline: false });
         // construiria un token que venza al instante
-        return done(null, { user_id: null })
+        return done(null, { user_id: null });
       } catch (error) {
-        return done(error)
+        return done(error);
       }
     }
   )

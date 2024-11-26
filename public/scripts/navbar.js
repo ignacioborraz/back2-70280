@@ -1,7 +1,7 @@
 async function verifyOnline() {
   try {
-    const token = localStorage.getItem("token");
-    if (token) {
+    // const token = localStorage.getItem("token");
+    // if (token) {
       const url = "http://localhost:8080/api/sessions/online";
       const opts = {
         method: "POST",
@@ -46,7 +46,7 @@ async function verifyOnline() {
             location.replace("/");
           });
       }
-    }
+    // }
   } catch (error) {
     console.log(error);
   }

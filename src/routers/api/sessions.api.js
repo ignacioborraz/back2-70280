@@ -1,16 +1,16 @@
 import { Router } from "express";
 import { readById } from "../../data/mongo/managers/users.manager.js";
-import passport from "../../middlewares/passport.mid.js";
+import passportCb from "../../middlewares/passportCb.mid.js";
 
 const sessionsRouter = Router();
 const opts = { session: false }
 
-sessionsRouter.post("/register", passport.authenticate("register", opts), register);
-sessionsRouter.post("/login", passport.authenticate("login", opts), login);
-sessionsRouter.post("/signout", passport.authenticate("signout", opts), signout);
-sessionsRouter.post("/online", passport.authenticate("online", opts), onlineToken);
-sessionsRouter.get("/google", passport.authenticate("google", { scope: ["email", "profile"] }));
-sessionsRouter.get("/google/cb", passport.authenticate("google"), google);
+sessionsRouter.post("/register", passportCb("register"), register);
+sessionsRouter.post("/login", passportCb("login"), login);
+sessionsRouter.post("/signout", passportCb("signout"), signout);
+sessionsRouter.post("/online", passportCb("online"), onlineToken);
+sessionsRouter.get("/google", passportCb("google", { scope: ["email", "profile"] }));
+sessionsRouter.get("/google/cb", passportCb("google"), google);
 
 export default sessionsRouter;
 

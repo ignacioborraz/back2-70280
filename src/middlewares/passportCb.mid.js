@@ -7,7 +7,7 @@ export default (strategy) => {
         return next(err);
       }
       if (!user) {
-        return res.json({
+        return res.status(info.statusCode || 400).json({
           statusCode: info.statusCode || 400,
           message: info.message || "ERROR"
         });

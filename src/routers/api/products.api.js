@@ -5,24 +5,29 @@ import {
   update,
   destroy,
 } from "../../data/mongo/managers/products.manager.js";
-import passport from "../../middlewares/passport.mid.js";
+import passportCb from "../../middlewares/passportCb.mid.js";
+import verifyToken from "../../middlewares/verifyToken.mid.js";
+import isAdmin from "../../middlewares/isAdmin.mid.js";
 
 const productsApiRouter = Router();
 
 productsApiRouter.get("/", readProducts);
 productsApiRouter.post(
   "/",
-  passport.authenticate("admin", { session: false }),
+  verifyToken,
+  isAdmin,
+  // estos dos middlewares hacen lo mismo que la estrategia admin de passport-jwt
+  // pero en este caso se usa jwt PURO ya que no es compatible con passport-local
   createProduct
 );
 productsApiRouter.put(
   "/:id",
-  passport.authenticate("admin", { session: false }),
+  passportCb("admin"),
   updateProduct
 );
 productsApiRouter.delete(
   "/:id",
-  passport.authenticate("admin", { session: false }),
+  passportCb("admin"),
   destroyProduct
 );
 
