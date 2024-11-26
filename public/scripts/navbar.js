@@ -4,9 +4,12 @@ async function verifyOnline() {
     const url = "http://localhost:8080/api/sessions/online"
     const opts = {
       method: "POST",
-      headers: { "Content-Type": "application/json", token },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer "+token        
+      },
     }
-    let response = await fetch(url, opts)
+    let response = await fetch(url, opts)    
     response = await response.json()
     const { online } = response
     if (online) {
