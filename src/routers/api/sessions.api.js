@@ -1,60 +1,50 @@
 import { Router } from "express";
 import { readById } from "../../data/mongo/managers/users.manager.js";
-import passport from "../../middlewares/passport.mid.js";
-import { verifyTokenUtil } from "../../utils/token.util.js";
+import passportCb from "../../middlewares/passportCb.mid.js";
 
 const sessionsRouter = Router();
-const opts = { session: false };
 
-sessionsRouter.post(
-  "/register",
-  passport.authenticate("register", opts),
-  register
-);
-sessionsRouter.post("/login", passport.authenticate("login", opts), login);
-sessionsRouter.post(
-  "/signout",
-  passport.authenticate("signout", opts),
-  signout
-);
-sessionsRouter.post(
-  "/online",
-  passport.authenticate("online", opts),
-  onlineToken
-);
-// /api/sessions/google va a llamar a la pantalla de consentimiento y se encarga de autenticar en google
+sessionsRouter.post("/register", passportCb("register"), register);
+sessionsRouter.post("/login", passportCb("login"), login);
+sessionsRouter.post("/signout", passportCb("signout"), signout);
+sessionsRouter.post("/online", passportCb("online"), onlineToken);
 sessionsRouter.get(
   "/google",
-  passport.authenticate("google", { scope: ["email", "profile"] })
+  passportCb("google", { scope: ["email", "profile"] })
 );
-// /api/sessions/google/cb va a llamar efectivamente a la estrategia encargada de register/login con google
-sessionsRouter.get("/google/cb", passport.authenticate("google", opts), google);
+sessionsRouter.get("/google/cb", passportCb("google"), google);
 
 export default sessionsRouter;
 
 async function register(req, res, next) {
   try {
-    const user = req.user;
-    return res
-      .status(201)
-      .json({ message: "USER REGISTERED", user_id: user._id });
+    const { _id } = req.user;
+    const { message } = req;
+    console.log();
+
+    return res.status(201).json({ message, user_id: _id });
   } catch (error) {
     return next(error);
   }
 }
 async function login(req, res, next) {
   try {
+    const { token } = req.user;
+    const opts = { maxAge: 60 * 60 * 24 * 7, httpOnly: true };
     return res
       .status(200)
-      .json({ message: "USER LOGGED IN", token: req.headers.token });
+      .cookie("token", token, opts)
+      .json({ message: "USER LOGGED IN" });
   } catch (error) {
     return next(error);
   }
 }
 function signout(req, res, next) {
   try {
-    delete req.token;
-    return res.status(200).json({ message: "USER SIGNED OUT" });
+    return res
+      .clearCookie("token")
+      .status(200)
+      .json({ message: "USER SIGNED OUT" });
   } catch (error) {
     return next(error);
   }
@@ -87,22 +77,11 @@ function google(req, res, next) {
   }
 }
 async function onlineToken(req, res, next) {
-  console.log(req.token);
-  
   try {
-    const { token } = req.token;
-    const data = verifyTokenUtil(token);
-    const one = await readById(data.user_id);
-    if (one) {
-      return res.status(200).json({
-        message: one.email.toUpperCase() + " IS ONLINE",
-        online: true,
-      });
-    } else {
-      return res
-        .status(400)
-        .json({ message: "USER IS NOT ONLINE", online: false });
-    }
+    return res.status(200).json({
+      message: req.user.email.toUpperCase() + " IS ONLINE",
+      online: true,
+    });
   } catch (error) {
     return next(error);
   }
