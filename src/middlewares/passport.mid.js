@@ -1,138 +1,133 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as GoogleStrategy } from "passport-google-oauth2";
-import { create, readByEmail, readById, update } from "../data/mongo/managers/users.manager.js";
+import {
+  create,
+  readByEmail,
+  readById,
+  update,
+} from "../data/mongo/managers/users.manager.js";
 import { createHashUtil, verifyHashUtil } from "../utils/hash.util.js";
-import { createTokenUtil } from "../utils/token.util.js";
+import { createTokenUtil, verifyTokenUtil } from "../utils/token.util.js";
 const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, BASE_URL } = process.env;
 
-/**
- * @register
- * Verifica que el correo no exista en la base de datos.
- * Crea un nuevo usuario utilizando un hash de la contraseña.
- * Retorna al usuario recién registrado.
- */
 passport.use(
   "register",
   new LocalStrategy(
     {
-      /* OBJETO DE CONFIGURACION */ passReqToCallback: true,
-      usernameField: "email", // Campo que se usará como nombre de usuario
-      passwordField: "password", // Campo que se usará para la contraseña
+      passReqToCallback: true,
+      usernameField: "email",
     },
     async (req, email, password, done) => {
-      /* CB CON LA LOGICA DE LA ESTRATEGIA */
       try {
-        // Verificar si el usuario ya existe en la base de datos
-        const existingUser = await readByEmail(email);
-        if (existingUser) {
+        const one = await readByEmail(email);
+        if (one) {
           const error = new Error("USER ALREADY EXISTS");
           error.statusCode = 401;
           return done(error);
         }
-        // Hashear la contraseña antes de guardarla
         const hashedPassword = createHashUtil(password);
-        // Crear el nuevo usuario
-        const newUser = await create({
+        const user = await create({
           email,
           password: hashedPassword,
-          name: req.body.name || "Default Name", // Opcional: agregar otros campos como el nombre
-          role: req.body.role || "USER", // Asignar un rol por defecto
+          name: req.body.name || "Default Name"
         });
-        //retorno usuario recien creado
-        return done(null, newUser);
+        return done(null, user);
       } catch (error) {
         return done(error);
       }
     }
   )
 );
-/**
- * @login
- * Busca el usuario por correo en la base de datos.
- * Verifica si la contraseña ingresada coincide con el hash almacenado.
- * Generar el token de autenticación.
- * Modificar isOnline en la base de datos.
- * Retorna el usuario si la autenticación es exitosa.
- */
 passport.use(
   "login",
-  new LocalStrategy({ passReqToCallback: true, usernameField: "email" }, async (req, email, password, done) => {
-    try {
-      const user = await readByEmail(email);
-      if (!user) {
-        const error = new Error("USER NOT FOUND");
-        error.statusCode = 401;
+  new LocalStrategy(
+    { passReqToCallback: true, usernameField: "email" },
+    async (req, email, password, done) => {
+      try {
+        const user = await readByEmail(email);
+        if (!user) {
+          const error = new Error("USER NOT FOUND");
+          error.statusCode = 401;
+          return done(error);
+        }
+        const passwordForm = password; /* req.body.password */
+        const passwordDb = user.password;
+        const verify = verifyHashUtil(passwordForm, passwordDb);
+        if (!verify) {
+          const error = new Error("INVALID CREDENTIALS");
+          error.statusCode = 401;
+          return done(error);
+        }
+        const data = {
+          user_id: user._id,
+          role: user.role,
+        };
+        const token = createTokenUtil(data);
+        req.headers.token = token;
+        await update(user._id, { isOnline: true });
+        return done(null, user);
+      } catch (error) {
         return done(error);
       }
-      const passwordForm = password; /* req.body.password */
-      const passwordDb = user.password;
-      const verify = verifyHashUtil(passwordForm, passwordDb);
-      if (!verify) {
-        const error = new Error("INVALID CREDENTIALS");
-        error.statusCode = 401;
-        return done(error);
-      }
-      const data = {
-        user_id: user._id,
-        role: user.role,
-      };
-      const token = createTokenUtil(data);
-      req.token = token;
-      await update(user._id, { isOnline: true })
-      return done(null, user);
-    } catch (error) {
-      return done(error);
     }
-  })
+  )
 );
-/**
- * @admin
- * Similar a "login", pero adicionalmente verifica si el usuario tiene un rol administrativo.
- * Rechaza usuarios que no tienen permisos de administrador.
- */
 passport.use(
   "admin",
   new LocalStrategy(
-    {
-      /* OBJETO DE CONFIGURACION */
-    },
-    async () => {
-      /* CB CON LA LOGICA DE LA ESTRATEGIA */
+    { passReqToCallback: true },
+    async (req, done) => {
+      try {
+        const token = req.headers.token;
+        if (!token) {
+          const error = new Error("INVALID TOKEN");
+          error.statusCode = 401;
+          return done(error);
+        }
+        const { role, user_id } = verifyTokenUtil(token);
+        if (role !== "ADMIN") {
+          const error = new Error("UNAUTHORIZED");
+          error.statusCode = 403;
+          return done(error);
+        }
+        const user = await readById(user_id);
+        return done(null, user);
+      } catch (error) {
+        return done(error);
+      }
     }
   )
 );
-/**
- * @online
- * Valida al usuario mediante credenciales locales.
- * Puede servir para controlar el estado en tiempo real de usuarios conectados a la aplicación.
- */
 passport.use(
   "online",
   new LocalStrategy(
-    {
-      /* OBJETO DE CONFIGURACION */
-      passReqToCallback: true,
-      usernameField: "email", // Campo que se usará como nombre de usuario
-      passwordField: "password", // Campo que se usará para la contraseña
-    },
-    async (req, email, password, done) => {
-      /* CB CON LA LOGICA DE LA ESTRATEGIA */
+    { passReqToCallback: true },
+    async (req, done) => {
       try {
-        // Validar el token
-        const token = req.token
-        const { user_id } = verifyTokenUtil(token)
-        // buscar si el usuario está online
-        const user = await readById(user_id)
-        const { isOnline } = user
-        if (!isOnline) {
-            const error = new Error("USER IS NOT ONLINE")
-            error.statusCode = 401
+        const headers = req.headers
+        console.log(headers);
+        
+        const authHeader = headers["Authorization"];
+        console.log(authHeader);
+        if (!authHeader) {
+          const error = new Error("INVALID TOKEN");
+          error.statusCode = 401;
+          return done(error);
+        } else {          
+          const token =authHeader.split(" ")[1]
+          const { user_id } = verifyTokenUtil(token);
+          const user = await readById(user_id);
+          const { isOnline } = user;
+          if (!isOnline) {
+            const error = new Error("USER IS NOT ONLINE");
+            error.statusCode = 401;
             return done(error);
+          }
+          return done(null, user);
         }
-        return done(null, user)
       } catch (error) {
-        return done(null, user);
+        return done(error);
       }
     }
   )
@@ -145,26 +140,44 @@ passport.use(
 passport.use(
   "signout",
   new LocalStrategy(
-    {
-      /* OBJETO DE CONFIGURACION */
-    },
-    async () => {
-      /* CB CON LA LOGICA DE LA ESTRATEGIA */
+    { passReqToCallback: true, usernameField: "email" },
+    async (req, email, password, done) => {
+      try {
+        const token = req.headers.token;
+        if (!token) {
+          const error = new Error("USER NOT LOGGED");
+          error.statusCode = 401;
+          return done(error);
+        }
+        delete req.headers.token;
+        return done(null, null);
+      } catch (error) {
+        return done(error);
+      }
     }
   )
 );
 passport.use(
   "google",
   new GoogleStrategy(
-    { clientID: GOOGLE_CLIENT_ID, clientSecret: GOOGLE_CLIENT_SECRET, passReqToCallback: true, callbackURL: BASE_URL + "sessions/google/cb" },
+    {
+      clientID: GOOGLE_CLIENT_ID,
+      clientSecret: GOOGLE_CLIENT_SECRET,
+      passReqToCallback: true,
+      callbackURL: BASE_URL + "sessions/google/cb",
+    },
     async (req, accessToken, refreshToken, profile, done) => {
       try {
         const { id, picture } = profile;
         let user = await readByEmail(id);
         if (!user) {
-          user = await create({ email: id, photo: picture, password: createHashUtil(id) });
+          user = await create({
+            email: id,
+            photo: picture,
+            password: createHashUtil(id),
+          });
         }
-        req.token = createTokenUtil({ role: user.role, user: user._id });
+        req.headers.token = createTokenUtil({ role: user.role, user: user._id });
         return done(null, user);
       } catch (error) {
         return done(error);
