@@ -12,10 +12,10 @@ class CartsApiRouter extends CustomRouter {
     this.init();
   }
   init = () => {
-    this.create("/", createCart);
-    this.read("/:user_id", readCartsFromUser);
-    this.update("/:id", updateCart);
-    this.destroy("/:id", destroyCart);
+    this.create("/", ["USER"], createCart);
+    this.read("/:user_id", ["USER", "ADMIN"], readCartsFromUser);
+    this.update("/:id", ["USER", "ADMIN"], updateCart);
+    this.destroy("/:id", ["USER", "ADMIN"], destroyCart);
   };
 }
 

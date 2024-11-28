@@ -15,10 +15,10 @@ class ProductsApiRouter extends CustomRouter {
     this.init();
   }
   init = () => {
-    this.read("/", readProducts);
-    this.create("/", verifyToken, isAdmin, createProduct);
-    this.update("/:id", passportCb("admin"), updateProduct);
-    this.destroy("/:id", passportCb("admin"), destroyProduct);
+    this.create("/", ["ADMIN"], verifyToken, isAdmin, createProduct);
+    this.read("/", ["PUBLIC"], readProducts);
+    this.update("/:id", ["ADMIN"], passportCb("admin"), updateProduct);
+    this.destroy("/:id", ["ADMIN"], passportCb("admin"), destroyProduct);
   };
 }
 
@@ -29,23 +29,32 @@ async function createProduct(req, res) {
   const message = "PRODUCT CREATED";
   const data = req.body;
   const response = await create(data);
-  return res.status(201).json({ response, message });
+  return res.json201(response, message);
 }
 async function readProducts(req, res) {
   const message = "PRODUCTS FOUND";
   const response = await read();
-  return res.status(200).json({ response, message });
+  if (response.length > 0) {
+    return res.json200(response, message);
+  }
+  return res.json404();
 }
 async function updateProduct(req, res) {
   const { id } = req.params;
   const data = req.body;
   const message = "PRODUCT UPDATED";
   const response = await update(id, data);
-  return res.status(200).json({ response, message });
+  if (response) {
+    return res.json200(response, message);
+  }
+  return res.json404();
 }
 async function destroyProduct(req, res) {
   const { id } = req.params;
   const message = "PRODUCT DELETED";
   const response = await destroy(id);
-  return res.status(200).json({ response, message });
+  if (response) {
+    return res.json200(response, message);
+  }
+  return res.json404();
 }

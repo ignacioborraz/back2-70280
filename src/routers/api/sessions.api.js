@@ -8,12 +8,12 @@ class SessionsApiRouter extends CustomRouter {
     this.init();
   }
   init = () => {
-    this.create("/register", passportCb("register"), register);
-    this.create("/login", passportCb("login"), login);
-    this.create("/signout", passportCb("signout"), signout);
-    this.create("/online", passportCb("online"), onlineToken);
-    this.read("/google", passportCb("google", { scope: ["email", "profile"] }));
-    this.read("/google/cb", passportCb("google"), google);
+    this.create("/register", ["PUBLIC"], passportCb("register"), register);
+    this.create("/login", ["PUBLIC"], passportCb("login"), login);
+    this.create("/signout", ["USER", "ADMIN"], passportCb("signout"), signout);
+    this.create("/online", ["USER", "ADMIN"], passportCb("online"), onlineToken);
+    this.read("/google", ["PUBLIC"], passportCb("google", { scope: ["email", "profile"] }));
+    this.read("/google/cb", ["PUBLIC"], passportCb("google"), google);
   };
 }
 
@@ -22,34 +22,32 @@ export default sessionsRouter.getRouter();
 
 async function register(req, res, next) {
   const { _id } = req.user;
-  return res.status(201).json({ message, user_id: _id });
+  const message = "User Registered!";
+  //return res.status(201).json({ message, user_id: _id });
+  return res.json201(_id, message);
 }
 async function login(req, res, next) {
   const { token } = req.user;
   const opts = { maxAge: 60 * 60 * 24 * 7, httpOnly: true };
-  return res
-    .status(200)
-    .cookie("token", token, opts)
-    .json({ message: "USER LOGGED IN" });
+  const message = "User logged in!";
+  const response = "OK";
+  return res.cookie("token", token, opts).json200(response, message);
 }
 function signout(req, res, next) {
-  return res
-    .status(200)
-    .clearCookie("token")
-    .json({ message: "USER SIGNED OUT" });
+  const message = "User signed out!";
+  const response = "OK";
+  return res.clearCookie("token").json200(response, message);
 }
 async function online(req, res, next) {
   const { user_id } = req.session;
   const one = await readById(user_id);
   if (req.session.user_id) {
-    return res.status(200).json({
-      message: one.email.toUpperCase() + " IS ONLINE",
-      online: true,
-    });
+    const message = one.email + " is online";
+    const response = true;
+    return res.json200(response, message);
   } else {
-    return res
-      .status(400)
-      .json({ message: "USER IS NOT ONLINE", online: false });
+    const message = "User is not online";
+    return res.json400(message);
   }
 }
 function google(req, res, next) {
