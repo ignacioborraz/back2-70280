@@ -15,7 +15,7 @@ class Manager {
 
     readByEmail = async (email) => {
         try {
-            const one = await this.model.findOne({ email }).lean()
+            const one = await this.model.findOne({ email }).lean()            
             return one
         } catch (error) {
             throw error

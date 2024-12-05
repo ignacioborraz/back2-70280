@@ -73,6 +73,8 @@ passport.use(
         await update(user._id, { isOnline: true });
         return done(null, user);
       } catch (error) {
+        console.log(error);
+        
         return done(error);
       }
     }
