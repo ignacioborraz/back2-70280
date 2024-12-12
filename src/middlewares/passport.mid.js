@@ -2,16 +2,12 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as GoogleStrategy } from "passport-google-oauth2";
 import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
-import {
-  create,
-  readByEmail,
-  readById,
-  update,
-} from "../data/mongo/managers/users.manager.js";
+import dao from "../dao/index.factory.js"
 import { createHashUtil, verifyHashUtil } from "../utils/hash.util.js";
 import { createTokenUtil, verifyTokenUtil } from "../utils/token.util.js";
 import envUtil from "../utils/env.util.js";
 const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, BASE_URL } = envUtil;
+const { UsersManager } = dao
 
 passport.use(
   "register",
@@ -22,13 +18,13 @@ passport.use(
     },
     async (req, email, password, done) => {
       try {
-        const one = await readByEmail(email);
+        const one = await UsersManager.readByEmail(email);
         if (one) {
           const info = { message: "USER ALREADY EXISTS", statusCode: 401 };
           return done(null, false, info);
         }
         const hashedPassword = createHashUtil(password);
-        const user = await create({
+        const user = await UsersManager.create({
           email,
           password: hashedPassword,
           name: req.body.name || "Default Name",
@@ -46,7 +42,7 @@ passport.use(
     { usernameField: "email" },
     async (email, password, done) => {
       try {
-        const user = await readByEmail(email);
+        const user = await UsersManager.readByEmail(email);
         if (!user) {
           // const error = new Error("USER NOT FOUND");
           // error.statusCode = 401;
@@ -98,7 +94,7 @@ passport.use(
           const info = { message: "NOT AUTHORIZE", statusCode: 403 };
           return done(null, false, info);
         }
-        const user = await readById(user_id);
+        const user = await UsersManager.readById(user_id);
         return done(null, user);
       } catch (error) {}
     }
@@ -114,7 +110,7 @@ passport.use(
     async (data, done) => {
       try {
         const { user_id } = data;
-        const user = await readById(user_id);
+        const user = await UsersManager.readById(user_id);
         const { isOnline } = user;
         if (!isOnline) {
           // const error = new Error("USER IS NOT ONLINE");
@@ -140,7 +136,7 @@ passport.use(
     async (data, done) => {
       try {
         const { user_id } = data;
-        await update(user_id, { isOnline: false });
+        await UsersManager.update(user_id, { isOnline: false });
         // construiria un token que venza al instante
         return done(null, { user_id: null });
       } catch (error) {
@@ -161,9 +157,9 @@ passport.use(
     async (req, accessToken, refreshToken, profile, done) => {
       try {
         const { id, picture } = profile;
-        let user = await readByEmail(id);
+        let user = await UsersManager.readByEmail(id);
         if (!user) {
-          user = await create({
+          user = await UsersManager.create({
             email: id,
             photo: picture,
             password: createHashUtil(id),

@@ -1,4 +1,5 @@
-import { readById } from "../data/mongo/managers/users.manager.js";
+import dao from "../dao/index.factory.js"
+const { UsersManager } = dao
 
 async function register(req, res, next) {
   const { _id } = req.user;
@@ -20,7 +21,7 @@ function signout(req, res, next) {
 }
 async function online(req, res, next) {
   const { user_id } = req.session;
-  const one = await readById(user_id);
+  const one = await UsersManager.readById(user_id);
   if (req.session.user_id) {
     const message = one.email + " is online";
     const response = true;

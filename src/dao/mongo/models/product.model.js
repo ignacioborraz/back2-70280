@@ -7,6 +7,7 @@ const collection = "products"
 // representativo del recurso
 const schema = new Schema({
     title: { type: String, required: true, index: true },
+    description: { type: String, default: "description" },
     price: { type: Number, default: 10 },
     stock: { type: Number, default: 10 },
     category: { type: String, enum: ["celulares","tablets","computadoras"], default: "computadoras"}

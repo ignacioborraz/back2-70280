@@ -15,7 +15,8 @@ class ProductsApiRouter extends CustomRouter {
     this.init();
   }
   init = () => {
-    this.create("/", ["ADMIN"], createProduct);
+    this.create("/", ["PUBLIC"], createProduct);
+    //this.create("/", ["ADMIN"], createProduct);
     this.read("/", ["PUBLIC"], readProducts);
     this.update("/:id", ["ADMIN"], passportCb("admin"), updateProduct);
     this.destroy("/:id", ["ADMIN"], passportCb("admin"), destroyProduct);

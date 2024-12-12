@@ -1,17 +1,12 @@
-import {
-  create,
-  read,
-  update,
-  destroy,
-} from "../data/mongo/managers/users.manager.js";
+import { createRepository, readRepository, updateRepository, destroyRepository } from "../repository/users.repository.js";
 
 class UsersService {
-  createService = async (data) => await create(data);
-  readService = async () => await read();
-  updateService = async (id, data) => await update(id, data);
-  destroyService = async (id) => await destroy(id);
+  createService = async (data) => await createRepository(data);
+  readService = async (user_id) => await readRepository({ user_id });
+  updateService = async (id, data) => await updateRepository(id, data);
+  destroyService = async (id) => await destroyRepository(id);
 }
 
 const service = new UsersService();
 const { createService, readService, updateService, destroyService } = service;
-export { createService, readService, updateService, destroyService };
+export { createService, readService, updateService, destroyService }

@@ -1,23 +1,12 @@
-import {
-  create,
-  read,
-  update,
-  destroy,
-} from "../data/mongo/managers/products.manager.js";
+import { createRepository, readRepository, updateRepository, destroyRepository } from "../repository/products.repository.js";
 
-async function createService(data) {
-  const response = await create(data);
-  return response;
-}
-async function readService() {
-  const response = await read();
-  return response;
-}
-async function updateService(id, data) {
-  const response = await update(id, data);
-  return response;
+class ProductsService {
+  createService = async (data) => await createRepository(data);
+  readService = async (user_id) => await readRepository({ user_id });
+  updateService = async (id, data) => await updateRepository(id, data);
+  destroyService = async (id) => await destroyRepository(id);
 }
 
-const destroyService = async (id) => await destroy(id);
-
-export { createService, readService, updateService, destroyService };
+const service = new ProductsService();
+const { createService, readService, updateService, destroyService } = service;
+export { createService, readService, updateService, destroyService }

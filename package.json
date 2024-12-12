@@ -7,6 +7,8 @@
   "scripts": {
     "start": "node ./index.js",
     "dev": "nodemon ./index.js --env dev",
+    "dev-fs": "nodemon ./index.js --persistence fs",
+    "dev-mem": "nodemon ./index.js --persistence memory",
     "args-test": "nodemon ./index.js --env test",
     "args-fs": "nodemon ./index.js --persistence fs 8080 development mongo user=igna"
   },
@@ -21,6 +23,7 @@
     "commander": "^12.1.0",
     "connect-mongo": "^5.1.0",
     "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "express-session": "^1.18.1",

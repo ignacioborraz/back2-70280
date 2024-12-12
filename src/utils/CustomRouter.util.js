@@ -1,7 +1,8 @@
 import { Router } from "express";
 import jwt from "jsonwebtoken";
 import envUtil from "./env.util.js";
-import { readById } from "../data/mongo/managers/users.manager.js";
+import dao from "../dao/index.factory.js"
+const { UsersManager } = dao
 
 class CustomRouter {
   constructor() {
@@ -44,7 +45,7 @@ class CustomRouter {
       ) {
         console.log(data);        
         console.log(user_id);
-        const user = await readById(user_id);
+        const user = await UsersManager.readById(user_id);
         console.log(user);
         
         if (!user) return res.json401();

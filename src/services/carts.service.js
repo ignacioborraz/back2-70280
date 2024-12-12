@@ -1,15 +1,10 @@
-import {
-  create,
-  read,
-  update,
-  destroy,
-} from "../data/mongo/managers/carts.manager.js";
+import { createRepository, readRepository, updateRepository, destroyRepository } from "../repository/carts.repository.js";
 
 class CartsService {
-  createService = async (data) => await create(data);
-  readService = async (user_id) => await read({ user_id });
-  updateService = async (id, data) => await update(id, data);
-  destroyService = async (id) => await destroy(id);
+  createService = async (data) => await createRepository(data);
+  readService = async (user_id) => await readRepository({ user_id });
+  updateService = async (id, data) => await updateRepository(id, data);
+  destroyService = async (id) => await destroyRepository(id);
 }
 
 const service = new CartsService();
