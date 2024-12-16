@@ -2,9 +2,7 @@ import Controller from "./index.js";
 import { ordersService, eatsService } from "../services/index.js";
 
 class OrdersController extends Controller {
-  constructor(service) {
-    super(service);
-  }
+  constructor(service) {  super(service) }
   addEats = async (req, res) => {
     const message = "Created!";
     const { eats } = req.body;

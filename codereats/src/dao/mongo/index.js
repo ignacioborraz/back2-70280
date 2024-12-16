@@ -4,9 +4,7 @@ import Order from "./models/order.model.js";
 import User from "./models/user.model.js";
 
 class Manager {
-  constructor(model) {
-    this.model = model;
-  }
+  constructor(model) { this.model = model }
   createOne = async (data) => await this.model.create(data);
   readOne = async (id) => await this.model.findById(id);
   readByEmail = async (email) => await this.model.findOne({ email });

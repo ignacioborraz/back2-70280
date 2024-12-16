@@ -1,7 +1,5 @@
 class Controller {
-  constructor(service) {
-    this.service = service;
-  }
+  constructor(service) { this.service = service }
   createOne = async (req, res) => {
     const message = "Created!";
     const data = req.body;

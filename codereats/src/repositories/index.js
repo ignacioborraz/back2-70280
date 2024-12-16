@@ -25,9 +25,4 @@ const companiesRepository = new Repository(companiesManager, CompanyDto);
 const eatsRepository = new Repository(eatsManager, EatDto);
 const ordersRepository = new Repository(ordersManager, OrderDto);
 
-export {
-  usersRepository,
-  companiesRepository,
-  eatsRepository,
-  ordersRepository,
-};
+export { usersRepository, companiesRepository, eatsRepository, ordersRepository };
