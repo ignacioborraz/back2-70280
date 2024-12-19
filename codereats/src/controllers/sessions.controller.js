@@ -10,7 +10,7 @@ class AuthController extends Controller {
   };
   login = async (req, res) => {
     const { token } = req.user;
-    const opts = { maxAge: 60 * 60 * 24 * 7, httpOnly: true };
+    const opts = { maxAge: 60 * 60 * 24 * 7 * 1000, httpOnly: true };
     const message = "User logged in!";
     return res.cookie("token", token, opts).json200("OK", message);
   };
